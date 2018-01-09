@@ -1,2 +1,2 @@
-# node-sql
+# sy-node-mysql
 mysql orm
