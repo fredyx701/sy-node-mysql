@@ -1,0 +1,35 @@
+[
+  {
+    "dbs": [
+      "db_one",
+      "dn_two"
+    ],
+    "port": 3306,
+    "host": "192.168.0.1",
+    "user": "root",
+    "password": "root",
+    "charset": "UTF8MB4_GENERAL_CI"
+  },
+  {
+    "dbs": [
+      "db_one"
+    ],
+    "port": 3306,
+    "host": "192.168.1.1",
+    "user": "root",
+    "password": "root",
+    "charset": "UTF8MB4_GENERAL_CI",
+    "readOnly": true
+  },
+  {
+    "dbs": [
+      "db_three"
+    ],
+    "port": 3306,
+    "host": "192.168.0.2",
+    "user": "root",
+    "password": "root",
+    "charset": "UTF8MB4_GENERAL_CI",
+    "readOnly": false
+  }
+]

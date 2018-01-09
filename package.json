@@ -1,0 +1,18 @@
+{
+  "name": "sy-node-mysql",
+  "version": "0.0.0",
+  "engines": {
+    "node": ">=6.0"
+  },
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/FredyXue/sy-node-mysql.git"
+  },
+  "license": "MIT",
+  "author": "fredyxue",
+  "main": "mysql_pool.js",
+  "dependencies": {
+    "mysql": "^2.15.0"
+  }
+}
