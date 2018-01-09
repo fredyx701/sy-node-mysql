@@ -1,6 +1,16 @@
 # sy-node-mysql
 a simple mysql orm
 
+[![npm package](https://nodei.co/npm/sy-node-mysql.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/sy-node-mysql/)
+
+
+### Getting Started
+```shell
+$ npm install sy-node-mysql --save
+```
+
+
+### Example
 
 ```javascript
 const MySql = require('sy-node-mysql');
