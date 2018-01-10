@@ -7,19 +7,28 @@ class MySqlPool {
      * @param config   配置内容   {dbs, host, port, user, password}
      */
     constructor(config) {
-        this.pool = {};
+        this.pools = {};
         for (let info of config) {
             const readOnly = info.readOnly;
-            const item = mysql.createPool({
+            const pool = mysql.createPool({
                 connectionLimit: 100,
                 host: info.host,
                 user: info.user,
                 password: info.password,
                 port: info.port
             });
-            for (let name of  info.dbs) {
-                name = (readOnly ? 'readOnly:' : '') + name;
-                this.pool[name] = item;
+            for (let dbname of  info.dbs) {
+                if (!this.pools[dbname]) {
+                    this.pools[dbname] = {
+                        master: null,
+                        follows: []
+                    }
+                }
+                if (readOnly) {
+                    this.pools[dbname].follows.push(pool);
+                } else {
+                    this.pools[dbname].master = pool;
+                }
             }
         }
     }
@@ -37,9 +46,21 @@ class MySqlPool {
         return new Promise(function (resolve, reject) {
             let conn = null;
             if (readOnly) {
-                conn = this.pool['readOnly:' + dbname];
+                if (this.pools[dbname].follows.length > 0) {
+                    if (this.pools[dbname].follows.length === 1) {
+                        conn = this.pools[dbname].follows[0];
+                    } else {
+                        conn = this.pools[dbname].follows[Math.floor(Math.random() * this.pools[dbname].follows.length)];
+                    }
+                } else {
+                    return reject(Error(`there is no client with ${dbname} readOnly`));
+                }
             } else {
-                conn = this.pool[dbname];
+                if (this.pools[dbname].master) {
+                    conn = this.pools[dbname].master;
+                } else {
+                    return reject(Error(`there is no client with ${dbname}`));
+                }
             }
             conn.getConnection(function (err, client) {
                 if (err) {
