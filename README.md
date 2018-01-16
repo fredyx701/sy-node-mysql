@@ -18,8 +18,12 @@ const config = require('./example/config.json');
 const mysql = new MySql(config);
 
 async function getItems() {
-    const sql = `select * from db_one.person where id = ?`;
-    const res = await mysql.exec(sql, [100], 'db_one');
+    const sql = `select * from db_one.person`;
+    const opts = {
+        where: ['id = ?'],
+        params: [100]
+    };
+    const res = await mysql.exec(sql, opts, 'db_one');
     return res[0];
 }
 
