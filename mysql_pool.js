@@ -43,21 +43,22 @@ class MySqlPool {
      * @return {Promise}
      */
     executeSql(sql, params, dbname, readOnly = false) {
+        let self = this;
         return new Promise(function (resolve, reject) {
             let conn = null;
             if (readOnly) {
-                if (this.pools[dbname].follows.length > 0) {
-                    if (this.pools[dbname].follows.length === 1) {
-                        conn = this.pools[dbname].follows[0];
+                if (self.pools[dbname].follows.length > 0) {
+                    if (self.pools[dbname].follows.length === 1) {
+                        conn = self.pools[dbname].follows[0];
                     } else {
-                        conn = this.pools[dbname].follows[Math.floor(Math.random() * this.pools[dbname].follows.length)];
+                        conn = self.pools[dbname].follows[Math.floor(Math.random() * self.pools[dbname].follows.length)];
                     }
                 } else {
                     return reject(Error(`there is no client with ${dbname} readOnly`));
                 }
             } else {
-                if (this.pools[dbname].master) {
-                    conn = this.pools[dbname].master;
+                if (self.pools[dbname].master) {
+                    conn = self.pools[dbname].master;
                 } else {
                     return reject(Error(`there is no client with ${dbname}`));
                 }
