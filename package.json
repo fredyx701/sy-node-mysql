@@ -1,6 +1,6 @@
 {
   "name": "sy-node-mysql",
-  "version": "0.0.5",
+  "version": "0.1.0",
   "description": "a simple mysql orm",
   "main": "mysql_pool.js",
   "engines": {
