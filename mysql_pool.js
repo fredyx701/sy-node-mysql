@@ -70,6 +70,10 @@ class MySqlPool {
                 client.query(sql, params, function (err, total) {
                     client.release();
                     if (err) {
+                        err.message_body = {
+                            sql: sql,
+                            params: params
+                        };
                         return reject(err);
                     }
                     resolve(total);
@@ -91,14 +95,39 @@ class MySqlPool {
     exec(sql, opts, dbname, readOnly = false) {
         // 条件sql
         if (opts) {
-            // 修改
+            // insert
+            if (opts.insert && opts.insert.length > 0) {
+                let insert_str = ' (';
+                let value_str = ' values(';
+                for (let i = 0; i < opts.insert.length; ++i) {
+                    if (i === opts.insert.length - 1) {
+                        insert_str += opts.insert[i] + ')';
+                        value_str += '?) ';
+                    } else {
+                        insert_str += opts.insert[i];
+                        value_str += '?,';
+                    }
+                }
+                sql += insert_str + value_str;
+                if (opts.onUpdate && opts.onUpdate.length > 0) {
+                    sql += ' ON DUPLICATE KEY UPDATE ';
+                    for (let i = 0; i < opts.onUpdate.length; ++i) {
+                        if (i === opts.onUpdate.length - 1) {
+                            sql += opts.onUpdate[i] + '= ?';
+                        } else {
+                            sql += opts.onUpdate[i] + '= ?, ';
+                        }
+                    }
+                }
+            }
+            // update
             if (opts.set && opts.set.length > 0) {
                 sql += ' set ';
                 for (let i = 0; i < opts.set.length; ++i) {
                     if (i === opts.set.length - 1) {
-                        sql += opts.set[i] + '= ? ';
+                        sql += opts.set[i] + '= ?';
                     } else {
-                        sql += opts.set[i] + '= ? , ';
+                        sql += opts.set[i] + '= ?, ';
                     }
                 }
             }
