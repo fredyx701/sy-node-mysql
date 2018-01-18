@@ -8,7 +8,8 @@
     "host": "192.168.0.1",
     "user": "root",
     "password": "root",
-    "charset": "UTF8MB4_GENERAL_CI"
+    "charset": "UTF8MB4_GENERAL_CI",
+    "connectionLimit": 50
   },
   {
     "dbs": [
@@ -19,6 +20,7 @@
     "user": "root",
     "password": "root",
     "charset": "UTF8MB4_GENERAL_CI",
+    "connectionLimit": 100,
     "readOnly": true
   },
   {
@@ -30,6 +32,7 @@
     "user": "root",
     "password": "root",
     "charset": "UTF8MB4_GENERAL_CI",
+    "connectionLimit": 100,
     "readOnly": false
   }
 ]

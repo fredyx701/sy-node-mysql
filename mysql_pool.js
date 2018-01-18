@@ -11,7 +11,7 @@ class MySqlPool {
         for (let info of config) {
             const readOnly = info.readOnly;
             const pool = mysql.createPool({
-                connectionLimit: 100,
+                connectionLimit: info.connectionLimit || 100,
                 host: info.host,
                 user: info.user,
                 password: info.password,
@@ -29,6 +29,24 @@ class MySqlPool {
                 } else {
                     this.pools[dbname].master = pool;
                 }
+            }
+        }
+    }
+
+
+    /**
+     * 更新连接池连接数上限
+     */
+    updateConnectionLimit(dbname, limit_count) {
+        if (!this.pools[dbname]) {
+            return;
+        }
+        if (this.pools[dbname].master) {
+            this.pools[dbname].master.config.connectionLimit = limit_count;
+        }
+        if (this.pools[dbname].follows.length > 0) {
+            for (let pool of this.pools[dbname].follows) {
+                pool.config.connectionLimit = limit_count;
             }
         }
     }
