@@ -7,7 +7,7 @@
   "private": false,
   "repository": {
     "type": "git",
-    "url": "https://github.com/FredyXue/sy-node-mysql.git"
+    "url": "git+https://github.com/FredyXue/sy-node-mysql.git"
   },
   "license": "MIT",
   "author": "fredyxue",
