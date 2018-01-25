@@ -21,7 +21,7 @@
     "password": "root",
     "charset": "UTF8MB4_GENERAL_CI",
     "connectionLimit": 100,
-    "readOnly": true
+    "readonly": true
   },
   {
     "dbs": [
@@ -33,6 +33,6 @@
     "password": "root",
     "charset": "UTF8MB4_GENERAL_CI",
     "connectionLimit": 100,
-    "readOnly": false
+    "readonly": false
   }
 ]

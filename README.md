@@ -25,7 +25,7 @@ async function select() {
         where: ['id = ?'],
         params: [100]
     };
-    const res = await mysql.exec(sql, opts, 'db_one', true/*readOnly*/);
+    const res = await mysql.exec(sql, opts, 'db_one', true/*readonly*/);
     return res[0];
 }
 

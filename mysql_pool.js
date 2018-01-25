@@ -9,7 +9,7 @@ class MySqlPool {
     constructor(config) {
         this.pools = {};
         for (let info of config) {
-            const readOnly = info.readOnly;
+            const readonly = info.readOnly || info.readonly;
             const pool = mysql.createPool({
                 connectionLimit: info.connectionLimit || 100,
                 host: info.host,
@@ -24,7 +24,7 @@ class MySqlPool {
                         follows: []
                     }
                 }
-                if (readOnly) {
+                if (readonly) {
                     this.pools[dbname].follows.push(pool);
                 } else {
                     this.pools[dbname].master = pool;
@@ -57,14 +57,14 @@ class MySqlPool {
      * @param sql
      * @param params
      * @param dbname
-     * @param readOnly
+     * @param readonly
      * @return {Promise}
      */
-    executeSql(sql, params, dbname, readOnly = false) {
+    executeSql(sql, params, dbname, readonly = false) {
         let self = this;
         return new Promise(function (resolve, reject) {
             let conn = null;
-            if (readOnly) {
+            if (readonly) {
                 if (self.pools[dbname].follows.length > 0) {
                     if (self.pools[dbname].follows.length === 1) {
                         conn = self.pools[dbname].follows[0];
@@ -72,7 +72,7 @@ class MySqlPool {
                         conn = self.pools[dbname].follows[Math.floor(Math.random() * self.pools[dbname].follows.length)];
                     }
                 } else {
-                    return reject(Error(`there is no client with ${dbname} readOnly`));
+                    return reject(Error(`there is no client with ${dbname} readonly`));
                 }
             } else {
                 if (self.pools[dbname].master) {
@@ -107,10 +107,10 @@ class MySqlPool {
      * @param opts   josn -> {set[], where[], params[], gropuBy, orderBy{column, sort}, limit{offset, size}}
      * opts.where 查询时的where 子句， opts.set 更新时的更新选项
      * @param dbname
-     * @param readOnly 是否从从库读取数据
+     * @param readonly 是否从从库读取数据
      * @returns {*}
      */
-    exec(sql, opts, dbname, readOnly = false) {
+    exec(sql, opts, dbname, readonly = false) {
         // 条件sql
         if (opts) {
             // insert
@@ -174,10 +174,10 @@ class MySqlPool {
             if (opts.end) {
                 sql += opts.end;
             }
-            return this.executeSql(sql, opts.params, dbname, readOnly);
+            return this.executeSql(sql, opts.params, dbname, readonly);
         }
         // 非条件sql
-        return this.executeSql(sql, null, dbname, readOnly);
+        return this.executeSql(sql, null, dbname, readonly);
     };
 }
 
