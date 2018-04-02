@@ -58,21 +58,18 @@ class MySqlPool {
      * @param params
      * @param dbname
      * @param readonly
+     * @param transaction
      * @return {Promise}
      */
-    executeSql(sql, params, dbname, readonly = false) {
+    executeSql(sql, params, dbname, readonly = false, transaction = false) {
         let self = this;
         return new Promise(function (resolve, reject) {
             let conn = null;
-            if (readonly) {
-                if (self.pools[dbname].follows.length > 0) {
-                    if (self.pools[dbname].follows.length === 1) {
-                        conn = self.pools[dbname].follows[0];
-                    } else {
-                        conn = self.pools[dbname].follows[Math.floor(Math.random() * self.pools[dbname].follows.length)];
-                    }
+            if (readonly && self.pools[dbname].follows.length > 0) {
+                if (self.pools[dbname].follows.length === 1) {
+                    conn = self.pools[dbname].follows[0];
                 } else {
-                    return reject(Error(`there is no client with ${dbname} readonly`));
+                    conn = self.pools[dbname].follows[Math.floor(Math.random() * self.pools[dbname].follows.length)];
                 }
             } else {
                 if (self.pools[dbname].master) {
@@ -92,6 +89,11 @@ class MySqlPool {
                             sql: sql,
                             params: params
                         };
+                        if (transaction) {
+                            return conn.rollback(() => {
+                                reject(err);
+                            });
+                        }
                         return reject(err);
                     }
                     resolve(total);
@@ -102,83 +104,122 @@ class MySqlPool {
 
 
     /**
-     * 封装条件查询接口
+     * query
      * @param sql
-     * @param opts   josn -> {set[], where[], params[], gropuBy, orderBy{column, sort}, limit{offset, size}}
-     * opts.where 查询时的where 子句， opts.set 更新时的更新选项
+     * @param opts
      * @param dbname
      * @param readonly 是否从从库读取数据
      * @returns {*}
      */
     exec(sql, opts, dbname, readonly = false) {
-        // 条件sql
-        if (opts) {
-            // insert
-            if (opts.insert && opts.insert.length > 0) {
-                let insert_str = ' (';
-                let value_str = ' values(';
-                for (let i = 0; i < opts.insert.length; ++i) {
-                    if (i === opts.insert.length - 1) {
-                        insert_str += opts.insert[i] + ')';
-                        value_str += '?) ';
-                    } else {
-                        insert_str += opts.insert[i];
-                        value_str += '?,';
-                    }
-                }
-                sql += insert_str + value_str;
-                if (opts.onUpdate && opts.onUpdate.length > 0) {
-                    sql += ' ON DUPLICATE KEY UPDATE ';
-                    for (let i = 0; i < opts.onUpdate.length; ++i) {
-                        if (i === opts.onUpdate.length - 1) {
-                            sql += opts.onUpdate[i] + '= ?';
-                        } else {
-                            sql += opts.onUpdate[i] + '= ?, ';
-                        }
-                    }
-                }
-            }
-            // update
-            if (opts.set && opts.set.length > 0) {
-                sql += ' set ';
-                for (let i = 0; i < opts.set.length; ++i) {
-                    if (i === opts.set.length - 1) {
-                        sql += opts.set[i] + '= ?';
-                    } else {
-                        sql += opts.set[i] + '= ?, ';
-                    }
-                }
-            }
-            // 查询
-            if (opts.where && opts.where.length > 0) {
-                sql += ' where (';
-                for (let i = 0; i < opts.where.length; ++i) {
-                    if (i === opts.where.length - 1) {
-                        sql += opts.where[i] + ')';
-                    } else {
-                        sql += opts.where[i] + ') and (';
-                    }
-                }
-            }
-            if (opts.groupBy) {
-                sql += ' group by ' + opts.groupBy;
-            }
-            if (opts.orderBy && opts.orderBy.column) {
-                sql += ' order by ' + opts.orderBy.column + ' ' + (opts.orderBy.sort || 'desc');
-            }
-            if (opts.limit) {
-                const offset = opts.limit.offset || 0;
-                const size = opts.limit.size || 10;
-                sql += ' limit ' + offset + ',' + size;
-            }
-            if (opts.end) {
-                sql += opts.end;
-            }
-            return this.executeSql(sql, opts.params, dbname, readonly);
-        }
-        // 非条件sql
-        return this.executeSql(sql, null, dbname, readonly);
+        sql = this.getSql(sql, opts);
+        return this.executeSql(sql, (opts && opts.params) || null, dbname, readonly);
     };
+
+
+    /**
+     * 事务操作
+     * @param querys    [{sql, opts}];
+     * @param dbname
+     * @param readonly
+     */
+    execTransaction(querys, dbname, readonly = false) {
+        if (!querys.length) {
+            throw Error('querys length must be > 1');
+        }
+        let sql = 'BEGIN;';
+        let params = [];
+        for (let query of querys) {
+            sql += this.getSql(query.sql, query.opts);
+            if (query.opts && query.opts.params) {
+                params.concat(query.opts.params);
+            }
+        }
+        sql += 'COMMIT;';
+        return this.executeSql(sql, params, dbname, readonly, true);
+    }
+
+
+    /**
+     * 封装条件查询接口
+     * @param sql
+     * @param opts   josn -> {set[], where[], params[], gropuBy, orderBy{column, sort}, limit{offset, size}}
+     * opts.where 查询时的where 子句， opts.set 更新时的更新选项
+     * @param sql
+     * @param opts
+     */
+    getSql(sql, opts) {
+        //条件sql
+        if (!opts) {
+            return sql;
+        }
+        // insert
+        if (opts.insert && opts.insert.length > 0) {
+            let insert_str = ' (';
+            let value_str = ' values(';
+            for (let i = 0; i < opts.insert.length; ++i) {
+                if (i === opts.insert.length - 1) {
+                    insert_str += opts.insert[i] + ')';
+                    value_str += '?) ';
+                } else {
+                    insert_str += opts.insert[i];
+                    value_str += '?,';
+                }
+            }
+            sql += insert_str + value_str;
+            if (opts.onUpdate && opts.onUpdate.length > 0) {
+                sql += ' ON DUPLICATE KEY UPDATE ';
+                for (let i = 0; i < opts.onUpdate.length; ++i) {
+                    if (i === opts.onUpdate.length - 1) {
+                        sql += opts.onUpdate[i] + '= ?';
+                    } else {
+                        sql += opts.onUpdate[i] + '= ?, ';
+                    }
+                }
+            }
+        }
+        // update
+        if (opts.set && opts.set.length > 0) {
+            sql += ' set ';
+            for (let i = 0; i < opts.set.length; ++i) {
+                if (i === opts.set.length - 1) {
+                    sql += opts.set[i] + '= ?';
+                } else {
+                    sql += opts.set[i] + '= ?, ';
+                }
+            }
+        }
+        // 查询
+        if (opts.where && opts.where.length > 0) {
+            sql += ' where (';
+            for (let i = 0; i < opts.where.length; ++i) {
+                if (i === opts.where.length - 1) {
+                    sql += opts.where[i] + ')';
+                } else {
+                    sql += opts.where[i] + ') and (';
+                }
+            }
+        }
+        if (opts.groupBy) {
+            sql += ' group by ' + opts.groupBy;
+        }
+        if (opts.orderBy && opts.orderBy.column) {
+            sql += ' order by ' + opts.orderBy.column + ' ' + (opts.orderBy.sort || 'desc');
+        }
+        if (opts.limit) {
+            const offset = opts.limit.offset || 0;
+            const size = opts.limit.size || 10;
+            sql += ' limit ' + offset + ',' + size;
+        }
+        if (opts.end) {
+            sql += opts.end;
+        }
+        sql = sql.trim();
+        if (sql.slice(-1) !== ';') {
+            sql += ';';
+        }
+        return sql;
+    }
 }
 
 
