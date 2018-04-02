@@ -55,4 +55,24 @@ async function insert() {
     return await mysql.exec(sql, opts, 'db_one');
 }
 
+
+async function transaction() {
+    const sql1 = `update db_one.person`;
+    const opts1 = {
+        set: ['name', 'age'],
+        where: ['id = ?'],
+        params: ['Tom', 18, 100]
+    };
+    const sql2 = `update db_one.person`;
+    const opts2 = {
+        set: ['name', 'age'],
+        where: ['id = ?'],
+        params: ['John', 16, 10]
+    };
+    const querys = [];
+    querys.push({sql: sql1, opts: opts1});
+    querys.push({sql: sql2, opts: opts2});
+    return await mysql_client.execTransaction(querys, 'db_one');
+}
+
 ```

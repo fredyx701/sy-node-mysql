@@ -90,7 +90,7 @@ class MySqlPool {
                             params: params
                         };
                         if (transaction) {
-                            return conn.rollback(() => {
+                            return client.rollback(() => {
                                 reject(err);
                             });
                         }
