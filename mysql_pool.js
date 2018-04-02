@@ -132,7 +132,7 @@ class MySqlPool {
         for (let query of querys) {
             sql += this.getSql(query.sql, query.opts);
             if (query.opts && query.opts.params) {
-                params.concat(query.opts.params);
+                params = params.concat(query.opts.params);
             }
         }
         sql += 'COMMIT;';
@@ -162,7 +162,7 @@ class MySqlPool {
                     insert_str += opts.insert[i] + ')';
                     value_str += '?) ';
                 } else {
-                    insert_str += opts.insert[i];
+                    insert_str += opts.insert[i] + ',';
                     value_str += '?,';
                 }
             }
