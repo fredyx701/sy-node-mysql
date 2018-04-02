@@ -118,25 +118,79 @@ class MySqlPool {
 
 
     /**
-     * 事务操作
-     * @param querys    [{sql, opts}];
-     * @param dbname
-     * @param readonly
+     * 执行事务sql
      */
-    execTransaction(querys, dbname, readonly = false) {
-        if (!querys.length) {
-            throw Error('querys length must be > 1');
-        }
-        let sql = 'BEGIN;';
-        let params = [];
-        for (let query of querys) {
-            sql += this.getSql(query.sql, query.opts);
-            if (query.opts && query.opts.params) {
-                params = params.concat(query.opts.params);
+    executeSqlTransaction(sql, params, client) {
+        return new Promise(function (resolve, reject) {
+            client.query(sql, params, function (err, total) {
+                if (err) {
+                    err.message_body = {
+                        sql: sql,
+                        params: params
+                    };
+                    return client.rollback(() => {
+                        client.release();
+                        reject(err);
+                    });
+                }
+                resolve(total);
+            });
+        });
+    };
+
+
+    /**
+     * 开始执行事务
+     */
+    beginTransaction(dbname) {
+        let self = this;
+        return new Promise(function (resolve, reject) {
+            let conn = null;
+            if (self.pools[dbname].master) {
+                conn = self.pools[dbname].master;
+            } else {
+                return reject(Error(`there is no client with ${dbname}`));
             }
-        }
-        sql += 'COMMIT;';
-        return this.executeSql(sql, params, dbname, readonly, true);
+            conn.getConnection(function (err, client) {
+                if (err) {
+                    return reject(err);
+                }
+                client.beginTransaction(function (err) {
+                    if (err) {
+                        return reject(err);
+                    }
+                    resolve(client);
+                });
+            });
+        });
+    }
+
+
+    /**
+     * 事务操作
+     */
+    execTransaction(sql, opts, client) {
+        sql = this.getSql(sql, opts);
+        return this.executeSqlTransaction(sql, (opts && opts.params) || null, client);
+    }
+
+
+    /**
+     * 提交
+     */
+    commit(client) {
+        return new Promise((resolve, reject) => {
+            client.commit(function (err) {
+                if (err) {
+                    return client.rollback(function () {
+                        client.release();
+                        reject(err);
+                    });
+                }
+                client.release();
+                resolve();
+            });
+        });
     }
 
 

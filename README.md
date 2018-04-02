@@ -57,22 +57,26 @@ async function insert() {
 
 
 async function transaction() {
+    const client = await mysql_client.beginTransaction('db_one');
+    
     const sql1 = `update db_one.person`;
     const opts1 = {
         set: ['name', 'age'],
         where: ['id = ?'],
         params: ['Tom', 18, 100]
     };
+    await mysql_client.execTransaction(sql1, opts1, client);
+    
     const sql2 = `update db_one.person`;
     const opts2 = {
         set: ['name', 'age'],
         where: ['id = ?'],
         params: ['John', 16, 10]
     };
-    const querys = [];
-    querys.push({sql: sql1, opts: opts1});
-    querys.push({sql: sql2, opts: opts2});
-    return await mysql_client.execTransaction(querys, 'db_one');
+    await mysql_client.execTransaction(sql2, opts2, client);
+    
+    return await mysql_client.commit(client);
 }
+
 
 ```
