@@ -157,6 +157,7 @@ class MySqlPool {
                 }
                 client.beginTransaction(function (err) {
                     if (err) {
+                        client.release();
                         return reject(err);
                     }
                     resolve(client);
