@@ -198,7 +198,7 @@ class MySqlPool {
     /**
      * 封装条件查询接口
      * @param sql
-     * @param opts   josn -> {set[], where[], params[], gropuBy, orderBy{column, sort}, limit{offset, size}}
+     * @param opts   josn -> {set[], where[], params[], gropuBy, having[], orderBy{column, sort}, limit{offset, size}}
      * opts.where 查询时的where 子句， opts.set 更新时的更新选项
      * @param sql
      * @param opts
@@ -257,6 +257,16 @@ class MySqlPool {
         }
         if (opts.groupBy) {
             sql += ' group by ' + opts.groupBy;
+            if (opts.having && opts.having.length > 0) {
+                sql += ' having (';
+                for (let i = 0; i < opts.having.length; ++i) {
+                    if (i === opts.having.length - 1) {
+                        sql += opts.having[i] + ')';
+                    } else {
+                        sql += opts.having[i] + ') and (';
+                    }
+                }
+            }
         }
         if (opts.orderBy && opts.orderBy.column) {
             sql += ' order by ' + opts.orderBy.column + ' ' + (opts.orderBy.sort || 'desc');
