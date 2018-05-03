@@ -58,10 +58,9 @@ class MySqlPool {
      * @param params
      * @param dbname
      * @param readonly
-     * @param transaction
      * @return {Promise}
      */
-    executeSql(sql, params, dbname, readonly = false, transaction = false) {
+    executeSql(sql, params, dbname, readonly = false) {
         let self = this;
         return new Promise(function (resolve, reject) {
             let conn = null;
@@ -89,11 +88,6 @@ class MySqlPool {
                             sql: sql,
                             params: params
                         };
-                        if (transaction) {
-                            return client.rollback(() => {
-                                reject(err);
-                            });
-                        }
                         return reject(err);
                     }
                     resolve(total);
