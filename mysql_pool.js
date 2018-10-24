@@ -17,7 +17,7 @@ class MySqlPool {
                 password: info.password,
                 port: info.port
             });
-            for (let dbname of  info.dbs) {
+            for (let dbname of info.dbs) {
                 if (!this.pools[dbname]) {
                     this.pools[dbname] = {
                         master: null,
@@ -192,10 +192,8 @@ class MySqlPool {
     /**
      * 封装条件查询接口
      * @param sql
-     * @param opts   josn -> {set[], where[], params[], gropuBy, having[], orderBy{column, sort}, limit{offset, size}}
+     * @param opts   josn -> {set[], where[], params[], groupBy, having[], orderBy [[column, sort]], limit{offset, size}}
      * opts.where 查询时的where 子句， opts.set 更新时的更新选项
-     * @param sql
-     * @param opts
      */
     getSql(sql, opts) {
         //条件sql
@@ -206,8 +204,8 @@ class MySqlPool {
         if (opts.insert && opts.insert.length > 0) {
             let insert_str = ' (';
             let value_str = ' values(';
-            for (let i = 0; i < opts.insert.length; ++i) {
-                if (i === opts.insert.length - 1) {
+            for (let i = 0, len = opts.insert.length; i < len; ++i) {
+                if (i === len - 1) {
                     insert_str += opts.insert[i] + ')';
                     value_str += '?) ';
                 } else {
@@ -218,7 +216,7 @@ class MySqlPool {
             sql += insert_str + value_str;
             if (opts.onUpdate && opts.onUpdate.length > 0) {
                 sql += ' ON DUPLICATE KEY UPDATE ';
-                for (let i = 0; i < opts.onUpdate.length; ++i) {
+                for (let i = 0, len = opts.onUpdate.length; i < len; ++i) {
                     if (i === opts.onUpdate.length - 1) {
                         sql += opts.onUpdate[i] + '= ?';
                     } else {
@@ -230,8 +228,8 @@ class MySqlPool {
         // update
         if (opts.set && opts.set.length > 0) {
             sql += ' set ';
-            for (let i = 0; i < opts.set.length; ++i) {
-                if (i === opts.set.length - 1) {
+            for (let i = 0, len = opts.set.length; i < len; ++i) {
+                if (i === len - 1) {
                     sql += opts.set[i] + '= ?';
                 } else {
                     sql += opts.set[i] + '= ?, ';
@@ -241,8 +239,8 @@ class MySqlPool {
         // 查询
         if (opts.where && opts.where.length > 0) {
             sql += ' where (';
-            for (let i = 0; i < opts.where.length; ++i) {
-                if (i === opts.where.length - 1) {
+            for (let i = 0, len = opts.where.length; i < len; ++i) {
+                if (i === len - 1) {
                     sql += opts.where[i] + ')';
                 } else {
                     sql += opts.where[i] + ') and (';
@@ -253,8 +251,8 @@ class MySqlPool {
             sql += ' group by ' + opts.groupBy;
             if (opts.having && opts.having.length > 0) {
                 sql += ' having (';
-                for (let i = 0; i < opts.having.length; ++i) {
-                    if (i === opts.having.length - 1) {
+                for (let i = 0, len = opts.having.length; i < len; ++i) {
+                    if (1 === len - 1) {
                         sql += opts.having[i] + ')';
                     } else {
                         sql += opts.having[i] + ') and (';
@@ -262,8 +260,20 @@ class MySqlPool {
                 }
             }
         }
-        if (opts.orderBy && opts.orderBy.column) {
-            sql += ' order by ' + opts.orderBy.column + ' ' + (opts.orderBy.sort || 'desc');
+        if (opts.orderBy) {
+            if (opts.orderBy instanceof Array && opts.orderBy.length > 0) {
+                sql += ' order by ';
+                for (let i = 0, len = opts.orderBy.length; i < len; i++) {
+                    const [column, sort] = opts.orderBy[i];
+                    if (i === len - 1) {
+                        sql += column + ' ' + (sort || 'desc');
+                    } else {
+                        sql += column + ' ' + (sort || 'desc') + ', ';
+                    }
+                }
+            } else if (opts.orderBy.column) {
+                sql += ' order by ' + opts.orderBy.column + ' ' + (opts.orderBy.sort || 'desc');
+            }
         }
         if (opts.limit) {
             const offset = opts.limit.offset || 0;
