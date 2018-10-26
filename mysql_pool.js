@@ -53,6 +53,25 @@ class MySqlPool {
 
 
     /**
+     * 获取mysql实例
+     * @param {String} dbname 
+     * @param {Boolean} readonly 
+     */
+    getInstance(dbname, readonly) {
+        if (readonly && this.pools[dbname].follows.length > 0) {
+            if (this.pools[dbname].follows.length === 1) {
+                return this.pools[dbname].follows[0];
+            }
+            return this.pools[dbname].follows[Math.floor(Math.random() * this.pools[dbname].follows.length)];
+        }
+        if (this.pools[dbname].master) {
+            return this.pools[dbname].master;
+        }
+        return null;
+    }
+
+
+    /**
      * 执行sql
      * @param sql
      * @param params
@@ -61,27 +80,18 @@ class MySqlPool {
      * @return {Promise}
      */
     executeSql(sql, params, dbname, readonly = false) {
-        let self = this;
+        const _this = this;
         return new Promise(function (resolve, reject) {
             let conn = null;
-            if (readonly && self.pools[dbname].follows.length > 0) {
-                if (self.pools[dbname].follows.length === 1) {
-                    conn = self.pools[dbname].follows[0];
-                } else {
-                    conn = self.pools[dbname].follows[Math.floor(Math.random() * self.pools[dbname].follows.length)];
-                }
-            } else {
-                if (self.pools[dbname].master) {
-                    conn = self.pools[dbname].master;
-                } else {
-                    return reject(Error(`there is no client with ${dbname}`));
-                }
+            conn = _this.getInstance(dbname, readonly);
+            if (!conn) {
+                return reject(Error(`there is no client with ${dbname}`));
             }
             conn.getConnection(function (err, client) {
                 if (err) {
                     return reject(err);
                 }
-                client.query(sql, params, function (err, total) {
+                client.query(sql, params, function (err, results) {
                     client.release();
                     if (err) {
                         err.message_body = {
@@ -90,7 +100,7 @@ class MySqlPool {
                         };
                         return reject(err);
                     }
-                    resolve(total);
+                    resolve(results);
                 });
             });
         });
@@ -106,6 +116,9 @@ class MySqlPool {
      * @returns {*}
      */
     exec(sql, opts, dbname, readonly = false) {
+        if (opts instanceof Array) {
+            return this.executeSql(sql, opts, client);
+        }
         sql = this.getSql(sql, opts);
         return this.executeSql(sql, (opts && opts.params) || null, dbname, readonly);
     };
@@ -114,20 +127,17 @@ class MySqlPool {
     /**
      * 执行事务sql
      */
-    executeSqlTransaction(sql, params, client) {
+    _executeSqlTransaction(sql, params, client) {
         return new Promise(function (resolve, reject) {
-            client.query(sql, params, function (err, total) {
+            client.query(sql, params, function (err, results) {
                 if (err) {
                     err.message_body = {
                         sql: sql,
                         params: params
                     };
-                    return client.rollback(() => {
-                        client.release();
-                        reject(err);
-                    });
+                    return reject(err);
                 }
-                resolve(total);
+                resolve(results);
             });
         });
     };
@@ -137,11 +147,11 @@ class MySqlPool {
      * 开始执行事务
      */
     beginTransaction(dbname) {
-        let self = this;
+        const _this = this;
         return new Promise(function (resolve, reject) {
             let conn = null;
-            if (self.pools[dbname].master) {
-                conn = self.pools[dbname].master;
+            if (_this.pools[dbname].master) {
+                conn = _this.pools[dbname].master;
             } else {
                 return reject(Error(`there is no client with ${dbname}`));
             }
@@ -154,6 +164,15 @@ class MySqlPool {
                         client.release();
                         return reject(err);
                     }
+                    client.exec = function (sql, opts) {
+                        return _this._execTransaction(sql, opts, client);
+                    }
+                    client.commit = function () {
+                        return _this._commit(client);
+                    }
+                    client.rollback = function () {
+                        return _this._rollback(client);
+                    }
                     resolve(client);
                 });
             });
@@ -164,24 +183,36 @@ class MySqlPool {
     /**
      * 事务操作
      */
-    execTransaction(sql, opts, client) {
+    _execTransaction(sql, opts, client) {
+        if (opts instanceof Array) {
+            return this._executeSqlTransaction(sql, opts, client);
+        }
         sql = this.getSql(sql, opts);
-        return this.executeSqlTransaction(sql, (opts && opts.params) || null, client);
+        return this._executeSqlTransaction(sql, (opts && opts.params) || null, client);
     }
 
 
     /**
      * 提交
      */
-    commit(client) {
+    _commit(client) {
         return new Promise((resolve, reject) => {
             client.commit(function (err) {
                 if (err) {
-                    return client.rollback(function () {
-                        client.release();
-                        reject(err);
-                    });
+                    return reject(err);
                 }
+                client.release();
+                resolve();
+            });
+        });
+    }
+
+    /**
+     * 回滚 
+     */
+    _rollback(client) {
+        return new Promise((resolve, reject) => {
+            client.rollback(function () {
                 client.release();
                 resolve();
             });
