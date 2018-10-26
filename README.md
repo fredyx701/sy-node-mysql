@@ -1,5 +1,5 @@
 # sy-node-mysql
-a simple mysql orm
+a simple mysql builder
 
 [![npm package](https://nodei.co/npm/sy-node-mysql.png?downloads=true&downloadRank=true&stars=true)](https://nodei.co/npm/sy-node-mysql/)
 
