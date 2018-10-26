@@ -8,6 +8,7 @@ class MySqlPool {
      */
     constructor(config) {
         this.pools = {};
+        config = config instanceof Array ? config : [config];
         for (let info of config) {
             const readonly = info.readOnly || info.readonly;
             const pool = mysql.createPool({
@@ -223,8 +224,8 @@ class MySqlPool {
     /**
      * 封装条件查询接口
      * @param sql
-     * @param opts   josn -> {set[], where[], params[], groupBy, having[], orderBy [[column, sort]], limit{offset, size}}
-     * opts.where 查询时的where 子句， opts.set 更新时的更新选项
+     * @param opts   josn -> {update[], where[], params[], group, having[], order [[column, sort]], limit{offset, size}}
+     * opts.where 查询时的where 子句， opts.update 更新时的更新选项
      */
     getSql(sql, opts) {
         //条件sql
@@ -257,13 +258,27 @@ class MySqlPool {
             }
         }
         // update
-        if (opts.set && opts.set.length > 0) {
+        const isUpdate = opts.update && opts.update.length > 0;
+        const isLiteralUpdate = opts.literalUpdate && opts.literalUpdate.length > 0;
+        if (isUpdate || isLiteralUpdate) {
             sql += ' set ';
-            for (let i = 0, len = opts.set.length; i < len; ++i) {
-                if (i === len - 1) {
-                    sql += opts.set[i] + '= ?';
-                } else {
-                    sql += opts.set[i] + '= ?, ';
+            if (isUpdate) {
+                for (let i = 0, len = opts.update.length; i < len; ++i) {
+                    if (i === len - 1) {
+                        sql += opts.update[i] + '= ?';
+                    } else {
+                        sql += opts.update[i] + '= ?, ';
+                    }
+                }
+            }
+            if (isLiteralUpdate) {
+                sql += isUpdate ? ', ' : '';
+                for (let i = 0, len = opts.literalUpdate.length; i < len; ++i) {
+                    if (i === len - 1) {
+                        sql += opts.literalUpdate[i];
+                    } else {
+                        sql += opts.literalUpdate[i] + ', ';
+                    }
                 }
             }
         }
@@ -278,12 +293,12 @@ class MySqlPool {
                 }
             }
         }
-        if (opts.groupBy) {
-            sql += ' group by ' + opts.groupBy;
+        if (opts.group) {
+            sql += ' group by ' + opts.group;
             if (opts.having && opts.having.length > 0) {
                 sql += ' having (';
                 for (let i = 0, len = opts.having.length; i < len; ++i) {
-                    if (1 === len - 1) {
+                    if (i === len - 1) {
                         sql += opts.having[i] + ')';
                     } else {
                         sql += opts.having[i] + ') and (';
@@ -291,19 +306,17 @@ class MySqlPool {
                 }
             }
         }
-        if (opts.orderBy) {
-            if (opts.orderBy instanceof Array && opts.orderBy.length > 0) {
+        if (opts.order) {
+            if (opts.order instanceof Array && opts.order.length > 0) {
                 sql += ' order by ';
-                for (let i = 0, len = opts.orderBy.length; i < len; i++) {
-                    const [column, sort] = opts.orderBy[i];
+                for (let i = 0, len = opts.order.length; i < len; i++) {
+                    const [column, sort] = opts.order[i];
                     if (i === len - 1) {
                         sql += column + ' ' + (sort || 'desc');
                     } else {
                         sql += column + ' ' + (sort || 'desc') + ', ';
                     }
                 }
-            } else if (opts.orderBy.column) {
-                sql += ' order by ' + opts.orderBy.column + ' ' + (opts.orderBy.sort || 'desc');
             }
         }
         if (opts.limit) {

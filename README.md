@@ -37,11 +37,12 @@ select().then(data => {
 async function select2() {
     const sql = `select * from db_one.person`;
     const opts = {
-        where: ['id = ?'],
-        groupBy: 'city',
-        having: ['age >= ?'], 
-        orderBy: [['age','desc'], ['name', 'asc']],
-        params: [100, 10]
+        where: ['id in (?)'],
+        group: 'city',
+        having: ['age >= ?'],
+        order: [['age','desc'], ['name', 'asc']],
+        limit: {offset: 0, size: 10},
+        params: [[100,101], 10]
     };
     const res = await mysql.exec(sql, opts, 'db_one', true/*readonly*/);
     return res[0];
@@ -59,9 +60,10 @@ async function select3() {
 async function update() {
     const sql = `update db_one.person`
     const opts = {
-        set: ['name', 'age'],
+        update: ['name', 'age'],
+        literalUpdate: ['score = score + ?'],
         where: ['id = ?'],
-        params: ['Tom', 18, 100]
+        params: ['Tom', 18, 20, 100]
     };
     return await mysql.exec(sql, opts, 'db_one');
 }

@@ -13,6 +13,6 @@
   "author": "fredyxue",
   "main": "mysql_pool.js",
   "dependencies": {
-    "mysql": "^2.15.0"
+    "mysql": "^2.16.0"
   }
 }
