@@ -25,7 +25,7 @@ async function select() {
         where: ['id = ?'],
         params: [100]
     };
-    const res = await mysql.exec(sql, opts, 'db_one', true/*readonly*/);
+    const res = await mysql.query(sql, opts, 'db_one', true/*readonly*/);
     return res[0];
 }
 
@@ -44,7 +44,7 @@ async function select2() {
         limit: {offset: 0, size: 10},
         params: [[100,101], 10]
     };
-    const res = await mysql.exec(sql, opts, 'db_one', true/*readonly*/);
+    const res = await mysql.query(sql, opts, 'db_one', true/*readonly*/);
     return res[0];
 }
 
@@ -52,7 +52,7 @@ async function select2() {
 async function select3() {
     const sql = `select * from person where age > ? and age < ?`;
     const params = [10, 20];
-    const res = await mysql.exec(sql, params, 'db_one', true);
+    const res = await mysql.query(sql, params, 'db_one', true);
     return res[0];
 }
 
@@ -65,7 +65,7 @@ async function update() {
         where: ['id = ?'],
         params: ['Tom', 18, 20, 100]
     };
-    return await mysql.exec(sql, opts, 'db_one');
+    return await mysql.query(sql, opts, 'db_one');
 }
 
 
@@ -76,12 +76,12 @@ async function insert() {
         onUpdate: ['age'],
         params: ['Tom', 18, 18]
     };
-    return await mysql.exec(sql, opts, 'db_one');
+    return await mysql.query(sql, opts, 'db_one');
 }
 
 
 async function transaction() {
-    const client = await mysql_client.beginTransaction('db_one');
+    const transaction = await mysql_client.beginTransaction('db_one');
     try{
         const sql1 = `update db_one.person`;
         const opts1 = {
@@ -89,7 +89,7 @@ async function transaction() {
             where: ['id = ?'],
             params: ['Tom', 18, 100]
         };
-        await client.exec(sql1, opts1);
+        await transaction.query(sql1, opts1);
         
         const sql2 = `update db_one.person`;
         const opts2 = {
@@ -97,12 +97,12 @@ async function transaction() {
             where: ['id = ?'],
             params: ['John', 16, 10]
         };
-        await client.exec(sql2, opts2);
+        await transaction.query(sql2, opts2);
 
-        await client.commit();
+        await transaction.commit();
 
     } catch(err){
-        await client.rollback();
+        await transaction.rollback();
         throw err;
     }
 }

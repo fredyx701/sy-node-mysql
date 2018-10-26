@@ -116,7 +116,7 @@ class MySqlPool {
      * @param readonly 是否从从库读取数据
      * @returns {*}
      */
-    exec(sql, opts, dbname, readonly = false) {
+    query(sql, opts, dbname, readonly = false) {
         if (opts instanceof Array) {
             return this.executeSql(sql, opts, client);
         }
@@ -165,16 +165,18 @@ class MySqlPool {
                         client.release();
                         return reject(err);
                     }
-                    client.exec = function (sql, opts) {
-                        return _this._execTransaction(sql, opts, client);
+                    const transaction = {
+                        query(sql, opts) {
+                            return _this._execTransaction(sql, opts, client);
+                        },
+                        commit() {
+                            return _this._commit(client);
+                        },
+                        rollback() {
+                            return _this._rollback(client);
+                        }
                     }
-                    client.commit = function () {
-                        return _this._commit(client);
-                    }
-                    client.rollback = function () {
-                        return _this._rollback(client);
-                    }
-                    resolve(client);
+                    resolve(transaction);
                 });
             });
         });
