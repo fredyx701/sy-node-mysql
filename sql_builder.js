@@ -30,7 +30,7 @@ class SQLBuilder {
         return this.executeSql(sql, (opts && opts.params) || null, dbname, readonly);
     };
 
-    
+
     select(tableName, opts, dbname, readonly = false) {
         const sql = this._select(tableName, opts);
         return this.executeSql(sql, (opts && opts.params) || null, dbname, readonly);
@@ -165,8 +165,8 @@ class SQLBuilder {
     _select(tableName, opts) {
         assert(tableName, 'table name is null');
         let sql = 'select ';
-        if (opts.fileds instanceof Array && opts.fileds.length > 0) {
-            sql += opts.fileds.join(',');
+        if (opts.fields instanceof Array && opts.fields.length > 0) {
+            sql += opts.fields.join(',');
         } else {
             sql += '*';
         }
