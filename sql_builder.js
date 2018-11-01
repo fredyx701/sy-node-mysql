@@ -66,10 +66,10 @@ class SQLBuilder {
             let value_str = ' values(';
             for (let i = 0, len = opts.insert.length; i < len; ++i) {
                 if (i === len - 1) {
-                    insert_str += opts.insert[i] + ')';
+                    insert_str += '`' + opts.insert[i] + '`)';
                     value_str += '?) ';
                 } else {
-                    insert_str += opts.insert[i] + ',';
+                    insert_str += '`' + opts.insert[i] + '`,';
                     value_str += '?,';
                 }
             }
@@ -78,9 +78,9 @@ class SQLBuilder {
                 sql += ' ON DUPLICATE KEY UPDATE ';
                 for (let i = 0, len = opts.onUpdate.length; i < len; ++i) {
                     if (i === opts.onUpdate.length - 1) {
-                        sql += opts.onUpdate[i] + '= ?';
+                        sql += '`' + opts.onUpdate[i] + '`= ?';
                     } else {
-                        sql += opts.onUpdate[i] + '= ?, ';
+                        sql += '`' + opts.onUpdate[i] + '`= ?, ';
                     }
                 }
             }
@@ -93,9 +93,9 @@ class SQLBuilder {
             if (isUpdate) {
                 for (let i = 0, len = opts.update.length; i < len; ++i) {
                     if (i === len - 1) {
-                        sql += opts.update[i] + '= ?';
+                        sql += '`' + opts.update[i] + '`= ?';
                     } else {
-                        sql += opts.update[i] + '= ?, ';
+                        sql += '`' + opts.update[i] + '`= ?, ';
                     }
                 }
             }
@@ -122,7 +122,7 @@ class SQLBuilder {
             }
         }
         if (opts.group) {
-            sql += ' group by ' + opts.group;
+            sql += ' group by `' + opts.group + '`';
             if (opts.having && opts.having.length > 0) {
                 sql += ' having (';
                 for (let i = 0, len = opts.having.length; i < len; ++i) {
@@ -140,9 +140,9 @@ class SQLBuilder {
                 for (let i = 0, len = opts.orders.length; i < len; i++) {
                     const [column, sort] = opts.orders[i];
                     if (i === len - 1) {
-                        sql += column + ' ' + (sort || 'desc');
+                        sql += '`' + column + '` ' + (sort || 'desc');
                     } else {
-                        sql += column + ' ' + (sort || 'desc') + ', ';
+                        sql += '`' + column + '` ' + (sort || 'desc') + ', ';
                     }
                 }
             }
@@ -166,7 +166,9 @@ class SQLBuilder {
         assert(tableName, 'table name is null');
         let sql = 'select ';
         if (opts.fields instanceof Array && opts.fields.length > 0) {
-            sql += opts.fields.join(',');
+            sql += '`';
+            sql += opts.fields.join('`,`');
+            sql += '`';
         } else {
             sql += '*';
         }
