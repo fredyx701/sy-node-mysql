@@ -71,45 +71,16 @@ await mysql.query(sql, opts, 'TEST_DATABASE');
 * simple select
 
 ```js
-const sql = `select * from db_one.person`;
-const opts = {
-    where: ['id = ?'],
-    params: [100]
-};
-const res = await mysql.query(sql, opts, 'TEST_DATABASE', true/*readonly*/);
+const res = await mysql.select('person', { where: { id: 100 } }, 'TEST_DATABASE', true);
 ```
 
 * conditional select
 
 ```js
-const sql = `select * from db_one.person`;
-const opts = {
-    where: ['id in (?)'],
-    group: 'city',
-    having: ['age >= ?'],
-    orders: [['age', 'desc'], ['name', 'asc']],
-    limit: { offset: 0, size: 10 },
-    params: [[100, 101], 10]
-};
-const res = await mysql.query(sql, opts, 'TEST_DATABASE');
-```
-
-* use select()  select *
-
-```js
-const opts = {
-    where: ['id = ?'],
-    params: [100]
-};
-const res = await mysql.select('person', opts, 'TEST_DATABASE', true);
-```
-
-* use conditional select() 
-
-```js
 const opts = {
     fields: ['age', 'name'],
-    where: ['id in (?)'],
+    where: { aa: 1 },
+    literalWhere: ['id in (?)'],
     group: 'city',
     having: ['age >= ?'],
     orders: [['age', 'desc'], ['name', 'asc']],
@@ -130,52 +101,23 @@ const res = await mysql.query(sql, params, 'TEST_DATABASE');
 
 ### update
 
-* simple update
-
-```js
-const sql = `update db_one.person`
-const opts = {
-    update: ['name', 'age'],
-    literalUpdate: ['score = score + ?'],
-    where: ['id = ?'],
-    params: ['Tom', 18, 20, 100]
-};
-await mysql.query(sql, opts, 'TEST_DATABASE');
-```
-
-* use update()
-
 ```js
 const opts = {
-    update: ['name', 'age'],
+    update: { name: 'Tom', age: 18 },
     literalUpdate: ['score = score + ?'],
-    where: ['id = ?'],
-    params: ['Tom', 18, 20, 100]
+    where: { id: 100 },
+    literalWhere: [ 'age > ?' ],
+    params: [20, 20]
 };
-await mysql.update('person', opts, 'TEST_DATABASE');
+await mysql.update('db_one.person', opts, 'TEST_DATABASE');
 ```
 
 ### insert
 
-* simple insert
-
-```js
-const sql = `insert into db_one.person`
-const opts = {
-    insert: ['name', 'age'],
-    onUpdate: ['age'],
-    params: ['Tom', 18, 18]
-};
-await mysql.query(sql, opts, 'TEST_DATABASE');
-```
-
-* use insert()
-
 ```js
 const opts = {
-    insert: ['name', 'age'],
-    onUpdate: ['age'],
-    params: ['Tom', 18, 18]
+    insert: { name: 'Tom', age: 18 },
+    onUpdate: { age: 18 }
 };
 await mysql.insert('person', opts, 'TEST_DATABASE');
 ```
@@ -185,18 +127,15 @@ await mysql.insert('person', opts, 'TEST_DATABASE');
 ```js
 const transaction = await mysql.beginTransaction('TEST_DATABASE');
 try {
-    const sql1 = `update db_one.person`;
     const opts1 = {
-        update: ['name', 'age'],
-        where: ['id = ?'],
-        params: ['Tom', 18, 100]
+        update: { name: 'Tom', age: 18 },
+        where: { id: 100 },
     };
-    await transaction.query(sql1, opts1);
+    await transaction.update('person', opts1);
 
     const opts2 = {
-        update: ['name', 'age'],
-        where: ['id = ?'],
-        params: ['John', 16, 10]
+        update: { name: 'John', age: 16 },
+        where: { id: 10 },
     };
     await transaction.update('person', opts2);
 

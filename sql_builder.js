@@ -1,6 +1,7 @@
 'use strict';
 
 const assert = require('assert');
+const SqlString = require('mysql/lib/protocol/SqlString');
 
 
 class SQLBuilder {
@@ -64,82 +65,79 @@ class SQLBuilder {
         if (!opts) {
             return sql;
         }
+        let sql_arr = null;
+        let params_arr = null;
+        let sql_t = '';
         // insert
-        if (opts.insert && opts.insert.length > 0) {
-            let insert_str = ' (';
-            let value_str = ' values(';
-            for (let i = 0, len = opts.insert.length; i < len; ++i) {
-                if (i === len - 1) {
-                    insert_str += '`' + opts.insert[i] + '`)';
-                    value_str += '?) ';
-                } else {
-                    insert_str += '`' + opts.insert[i] + '`,';
-                    value_str += '?,';
-                }
+        if (this._isExistObject(opts.insert)) {
+            sql_arr = [];
+            const values_arr = [];
+            params_arr = [];
+            for (const key in opts.insert) {
+                sql_arr.push('`' + key + '`');
+                values_arr.push('?');
+                params_arr.push(opts.insert[key]);
             }
-            sql += insert_str + value_str;
-            if (opts.onUpdate && opts.onUpdate.length > 0) {
+            sql_t = `(${sql_arr.join(',')}) values (${values_arr.join(',')}) `;
+            sql += SqlString.format(sql_t, params_arr);
+            if (this._isExistObject(opts.onUpdate)) {
                 sql += ' ON DUPLICATE KEY UPDATE ';
-                for (let i = 0, len = opts.onUpdate.length; i < len; ++i) {
-                    if (i === opts.onUpdate.length - 1) {
-                        sql += '`' + opts.onUpdate[i] + '`= ?';
-                    } else {
-                        sql += '`' + opts.onUpdate[i] + '`= ?, ';
-                    }
+                sql_arr = [];
+                params_arr = [];
+                for (const key in opts.onUpdate) {
+                    sql_arr.push('`' + key + '`= ?');
+                    params_arr.push(opts.onUpdate[key]);
                 }
+                sql_t = sql_arr.join(',');
+                sql += SqlString.format(sql_t, params_arr);
             }
         }
         // update
-        const isUpdate = opts.update && opts.update.length > 0;
-        const isLiteralUpdate = opts.literalUpdate && opts.literalUpdate.length > 0;
+        const isUpdate = this._isExistObject(opts.update);
+        const isLiteralUpdate = this._isExitArray(opts.literalUpdate);
         if (isUpdate || isLiteralUpdate) {
             sql += ' set ';
             if (isUpdate) {
-                for (let i = 0, len = opts.update.length; i < len; ++i) {
-                    if (i === len - 1) {
-                        sql += '`' + opts.update[i] + '`= ?';
-                    } else {
-                        sql += '`' + opts.update[i] + '`= ?, ';
-                    }
+                sql_arr = [];
+                params_arr = [];
+                for (const key in opts.update) {
+                    sql_arr.push('`' + key + '`= ?');
+                    params_arr.push(opts.update[key]);
                 }
+                sql_t = sql_arr.join(',');
+                sql += SqlString.format(sql_t, params_arr);
             }
             if (isLiteralUpdate) {
-                sql += isUpdate ? ', ' : '';
-                for (let i = 0, len = opts.literalUpdate.length; i < len; ++i) {
-                    if (i === len - 1) {
-                        sql += opts.literalUpdate[i];
-                    } else {
-                        sql += opts.literalUpdate[i] + ', ';
-                    }
-                }
+                sql += (isUpdate ? ', ' : '') + opts.literalUpdate.join(',');
             }
         }
         // 查询
-        if (opts.where && opts.where.length > 0) {
-            sql += ' where (';
-            for (let i = 0, len = opts.where.length; i < len; ++i) {
-                if (i === len - 1) {
-                    sql += opts.where[i] + ')';
-                } else {
-                    sql += opts.where[i] + ') and (';
+        const isWhere = this._isExistObject(opts.where);
+        const isLiteralWhere = this._isExitArray(opts.literalWhere);
+        if (isWhere || isLiteralWhere) {
+            sql += ' where ';
+            if (isWhere) {
+                sql_arr = [];
+                params_arr = [];
+                for (const key in opts.where) {
+                    sql_arr.push('`' + key + '`= ?');
+                    params_arr.push(opts.where[key]);
                 }
+                sql_t = `(${sql_arr.join(') and (')})`;
+                sql += SqlString.format(sql_t, params_arr);
+            }
+            if (isLiteralWhere) {
+                sql += (isWhere ? ' and (' : '(') + opts.literalWhere.join(') and (') + ')';
             }
         }
         if (opts.group) {
             sql += ' group by `' + opts.group + '`';
-            if (opts.having && opts.having.length > 0) {
-                sql += ' having (';
-                for (let i = 0, len = opts.having.length; i < len; ++i) {
-                    if (i === len - 1) {
-                        sql += opts.having[i] + ')';
-                    } else {
-                        sql += opts.having[i] + ') and (';
-                    }
-                }
+            if (this._isExitArray(opts.having)) {
+                sql += ' having (' + opts.having.join(') and (') + ')';
             }
         }
         if (opts.orders) {
-            if (opts.orders instanceof Array && opts.orders.length > 0) {
+            if (this._isExitArray(opts.orders)) {
                 sql += ' order by ';
                 for (let i = 0, len = opts.orders.length; i < len; i++) {
                     const [ column, sort ] = opts.orders[i];
@@ -166,6 +164,16 @@ class SQLBuilder {
         return sql;
     }
 
+    _isExistObject(obj) {
+        return !(obj instanceof Array) && obj !== null
+            && typeof obj === 'object' && Object.keys(obj).length > 0;
+    }
+
+    _isExitArray(arr) {
+        return arr instanceof Array && arr.length > 0;
+    }
+
+    // select * from db_one.person
     _select(tableName, opts) {
         assert(tableName, 'table name is null');
         let sql = 'select ';
@@ -180,12 +188,14 @@ class SQLBuilder {
         return this.build(sql, opts);
     }
 
+    // update db_one.person
     _update(tableName, opts) {
         assert(tableName, 'table name is null');
         const sql = 'update ' + tableName;
         return this.build(sql, opts);
     }
 
+    // insert into db_one.person
     _insert(tableName, opts) {
         assert(tableName, 'table name is null');
         const sql = 'insert into ' + tableName;
