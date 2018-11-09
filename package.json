@@ -14,5 +14,9 @@
   "main": "mysql_pool.js",
   "dependencies": {
     "mysql": "^2.16.0"
+  },
+  "devDependencies": {
+    "eslint": "^4.11.0",
+    "eslint-config-egg": "^6.0.0"
   }
 }

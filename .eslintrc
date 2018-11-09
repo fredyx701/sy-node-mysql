@@ -1,0 +1,7 @@
+{
+  "extends": "eslint-config-egg",
+  "rules": {
+    "valid-jsdoc": "off",
+    "indent": ["error", 4]
+  }
+}

@@ -1,3 +1,5 @@
+'use strict';
+
 const SQLBuilder = require('./sql_builder');
 
 class Transaction extends SQLBuilder {
@@ -13,19 +15,19 @@ class Transaction extends SQLBuilder {
      */
     executeSql(sql, params) {
         const _this = this;
-        return new Promise(function (resolve, reject) {
-            _this.client.query(sql, params, function (err, results) {
+        return new Promise(function(resolve, reject) {
+            _this.client.query(sql, params, function(err, results) {
                 if (err) {
                     err.message_body = {
-                        sql: sql,
-                        params: params
+                        sql,
+                        params,
                     };
                     return reject(err);
                 }
                 resolve(results);
             });
         });
-    };
+    }
 
 
     /**
@@ -34,7 +36,7 @@ class Transaction extends SQLBuilder {
     commit() {
         const _this = this;
         return new Promise((resolve, reject) => {
-            _this.client.commit(function (err) {
+            _this.client.commit(function(err) {
                 if (err) {
                     return reject(err);
                 }
@@ -46,12 +48,12 @@ class Transaction extends SQLBuilder {
 
 
     /**
-     * 回滚 
+     * 回滚
      */
     rollback() {
         const _this = this;
-        return new Promise((resolve, reject) => {
-            _this.client.rollback(function () {
+        return new Promise(resolve => {
+            _this.client.rollback(function() {
                 _this.client.release();
                 resolve();
             });

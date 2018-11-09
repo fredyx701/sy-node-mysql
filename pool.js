@@ -1,3 +1,5 @@
+'use strict';
+
 const SQLBuilder = require('./sql_builder');
 
 class Pool extends SQLBuilder {
@@ -15,17 +17,17 @@ class Pool extends SQLBuilder {
     */
     executeSql(sql, params) {
         const _this = this;
-        return new Promise(function (resolve, reject) {
-            _this.conn.getConnection(function (err, client) {
+        return new Promise(function(resolve, reject) {
+            _this.conn.getConnection(function(err, client) {
                 if (err) {
                     return reject(err);
                 }
-                client.query(sql, params, function (err, results) {
+                client.query(sql, params, function(err, results) {
                     client.release();
                     if (err) {
                         err.message_body = {
-                            sql: sql,
-                            params: params
+                            sql,
+                            params,
                         };
                         return reject(err);
                     }
@@ -33,11 +35,10 @@ class Pool extends SQLBuilder {
                 });
             });
         });
-    };
+    }
 
 }
 
 
 module.exports = Pool;
-
 

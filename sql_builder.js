@@ -1,3 +1,5 @@
+'use strict';
+
 const assert = require('assert');
 
 
@@ -11,7 +13,9 @@ class SQLBuilder {
      * @param readonly
      * @return {Promise}
      */
-    executeSql(sql, params, dbname, readonly = false) { }
+    executeSql(sql, params, dbname, readonly = false) {
+        console.log(sql, params, dbname, readonly);
+    }
 
 
     /**
@@ -28,7 +32,7 @@ class SQLBuilder {
         }
         sql = this.build(sql, opts);
         return this.executeSql(sql, (opts && opts.params) || null, dbname, readonly);
-    };
+    }
 
 
     select(tableName, opts, dbname, readonly = false) {
@@ -56,7 +60,7 @@ class SQLBuilder {
      * opts.where 查询时的where 子句， opts.update 更新时的更新选项
      */
     build(sql, opts) {
-        //条件sql
+        // 条件sql
         if (!opts) {
             return sql;
         }
@@ -138,7 +142,7 @@ class SQLBuilder {
             if (opts.orders instanceof Array && opts.orders.length > 0) {
                 sql += ' order by ';
                 for (let i = 0, len = opts.orders.length; i < len; i++) {
-                    const [column, sort] = opts.orders[i];
+                    const [ column, sort ] = opts.orders[i];
                     if (i === len - 1) {
                         sql += '`' + column + '` ' + (sort || 'desc');
                     } else {
@@ -178,13 +182,13 @@ class SQLBuilder {
 
     _update(tableName, opts) {
         assert(tableName, 'table name is null');
-        let sql = 'update ' + tableName;
+        const sql = 'update ' + tableName;
         return this.build(sql, opts);
     }
 
     _insert(tableName, opts) {
         assert(tableName, 'table name is null');
-        let sql = 'insert into ' + tableName;
+        const sql = 'insert into ' + tableName;
         return this.build(sql, opts);
     }
 
