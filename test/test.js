@@ -12,7 +12,8 @@ let opts = {
     group: 'city',
     having: [ 'age >= ?', 'age <= ?' ],
     orders: [[ 'age', 'desc' ], [ 'name', 'asc' ]],
-    limit: { offset: 0, size: 10 },
+    limit: 10,
+    offset: 5,
     params: [[ 100, 101 ], 20, 10, 100 ],
 };
 let res = buider._select('db_one.person', opts);

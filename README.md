@@ -84,7 +84,8 @@ const opts = {
     group: 'city',
     having: ['age >= ?'],
     orders: [['age', 'desc'], ['name', 'asc']],
-    limit: { offset: 0, size: 10 },
+    limit: 10,
+    offset: 5,
     params: [[100, 101], 10]
 };
 const res = await mysql.select('person', opts, 'TEST_DATABASE');

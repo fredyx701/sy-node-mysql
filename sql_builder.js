@@ -57,7 +57,7 @@ class SQLBuilder {
     /**
      * 封装条件查询接口
      * @param sql
-     * @param opts   josn -> {update[], where[], params[], group, having[], orders [[column, sort]], limit{offset, size}}
+     * @param opts   josn -> {update[], where[], params[], group, having[], orders [[column, sort]], limit, offset}
      * opts.where 查询时的where 子句， opts.update 更新时的更新选项
      */
     build(sql, opts) {
@@ -150,8 +150,8 @@ class SQLBuilder {
             }
         }
         if (opts.limit) {
-            const offset = opts.limit.offset || 0;
-            const size = opts.limit.size || 10;
+            const offset = Number(opts.offset) || 0;
+            const size = Number(opts.limit) || 10;
             sql += ' limit ' + offset + ',' + size;
         }
         if (opts.end) {
