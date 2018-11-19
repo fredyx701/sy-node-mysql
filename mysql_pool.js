@@ -144,7 +144,8 @@ class MySQLPool extends SQLBuilder {
     get(dbname, readonly) {
         const conn = this._getInstance(dbname, readonly);
         if (!conn) {
-            throw Error(`there is no client with ${dbname}`);
+            // throw Error(`there is no client with ${dbname}`);
+            return null;
         }
         return new Pool(conn);
     }
