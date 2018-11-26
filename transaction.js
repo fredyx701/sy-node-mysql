@@ -7,6 +7,8 @@ class Transaction extends SQLBuilder {
     constructor(client) {
         super();
         this.client = client;
+        this.timezone = client.config.timezone;
+        this.stringifyObjects = client.config.stringifyObjects;
     }
 
 

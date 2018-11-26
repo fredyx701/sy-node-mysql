@@ -6,16 +6,18 @@ const SqlString = require('mysql/lib/protocol/SqlString');
 
 class SQLBuilder {
 
+    constructor() {
+        this.timezone = 'local';
+    }
+
     /**
      * 执行sql interface
      * @param sql
      * @param params
-     * @param dbname
-     * @param readonly
      * @return {Promise}
      */
-    executeSql(sql, params, dbname, readonly = false) {
-        console.log(sql, params, dbname, readonly);
+    executeSql(sql, params) {
+        console.log(sql, params);
     }
 
 
@@ -27,30 +29,30 @@ class SQLBuilder {
      * @param readonly 是否从从库读取数据
      * @returns {*}
      */
-    query(sql, opts, dbname, readonly = false) {
+    query(sql, opts) {
         if (opts instanceof Array) {
-            return this.executeSql(sql, opts, dbname, readonly);
+            return this.executeSql(sql, opts);
         }
         sql = this.build(sql, opts);
-        return this.executeSql(sql, (opts && opts.params) || null, dbname, readonly);
+        return this.executeSql(sql, (opts && opts.params) || null);
     }
 
 
-    select(tableName, opts, dbname, readonly = false) {
+    select(tableName, opts) {
         const sql = this._select(tableName, opts);
-        return this.executeSql(sql, (opts && opts.params) || null, dbname, readonly);
+        return this.executeSql(sql, (opts && opts.params) || null);
     }
 
 
-    update(tableName, opts, dbname) {
+    update(tableName, opts) {
         const sql = this._update(tableName, opts);
-        return this.executeSql(sql, (opts && opts.params) || null, dbname);
+        return this.executeSql(sql, (opts && opts.params) || null);
     }
 
 
-    insert(tableName, opts, dbname) {
+    insert(tableName, opts) {
         const sql = this._insert(tableName, opts);
-        return this.executeSql(sql, (opts && opts.params) || null, dbname);
+        return this.executeSql(sql, (opts && opts.params) || null);
     }
 
 
@@ -79,7 +81,7 @@ class SQLBuilder {
                 params_arr.push(opts.insert[key]);
             }
             sql_t = `(${sql_arr.join(',')}) values (${values_arr.join(',')}) `;
-            sql += SqlString.format(sql_t, params_arr);
+            sql += SqlString.format(sql_t, params_arr, this.stringifyObjects, this.timezone);
             if (this._isExistObject(opts.onUpdate)) {
                 sql += ' ON DUPLICATE KEY UPDATE ';
                 sql_arr = [];
@@ -89,7 +91,7 @@ class SQLBuilder {
                     params_arr.push(opts.onUpdate[key]);
                 }
                 sql_t = sql_arr.join(',');
-                sql += SqlString.format(sql_t, params_arr);
+                sql += SqlString.format(sql_t, params_arr, this.stringifyObjects, this.timezone);
             }
         }
         // update
@@ -105,7 +107,7 @@ class SQLBuilder {
                     params_arr.push(opts.update[key]);
                 }
                 sql_t = sql_arr.join(',');
-                sql += SqlString.format(sql_t, params_arr);
+                sql += SqlString.format(sql_t, params_arr, this.stringifyObjects, this.timezone);
             }
             if (isLiteralUpdate) {
                 sql += (isUpdate ? ', ' : '') + opts.literalUpdate.join(',');
@@ -124,7 +126,7 @@ class SQLBuilder {
                     params_arr.push(opts.where[key]);
                 }
                 sql_t = `(${sql_arr.join(') and (')})`;
-                sql += SqlString.format(sql_t, params_arr);
+                sql += SqlString.format(sql_t, params_arr, this.stringifyObjects, this.timezone);
             }
             if (isLiteralWhere) {
                 sql += (isWhere ? ' and (' : '(') + opts.literalWhere.join(') and (') + ')';

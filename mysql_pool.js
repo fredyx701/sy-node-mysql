@@ -1,17 +1,15 @@
 'use strict';
 
 const mysql = require('mysql');
-const SQLBuilder = require('./sql_builder');
 const Transaction = require('./transaction');
 const Pool = require('./pool');
 
-class MySQLPool extends SQLBuilder {
+class MySQLPool {
 
     /**
      * @param config   配置内容   {name, database, host, port, user, password}
      */
     constructor(config) {
-        super();
         this.pools = {};
         config = config instanceof Array ? config : [ config ];
         for (const info of config) {
@@ -53,58 +51,20 @@ class MySQLPool extends SQLBuilder {
         }
     }
 
-
-    /**
-     * 获取mysql实例
-     * @param {String} dbname
-     * @param {Boolean} readonly
-     */
-    _getInstance(dbname, readonly) {
-        if (readonly && this.pools[dbname].follows.length > 0) {
-            if (this.pools[dbname].follows.length === 1) {
-                return this.pools[dbname].follows[0];
-            }
-            return this.pools[dbname].follows[Math.floor(Math.random() * this.pools[dbname].follows.length)];
-        }
-        if (this.pools[dbname].master) {
-            return this.pools[dbname].master;
-        }
-        return null;
+    query(sql, opts, dbname, readonly = false) {
+        return this._get(dbname, readonly).query(sql, opts);
     }
 
+    select(tableName, opts, dbname, readonly = false) {
+        return this._get(dbname, readonly).select(tableName, opts);
+    }
 
-    /**
-     * 执行sql
-     * @param sql
-     * @param params
-     * @param dbname
-     * @param readonly
-     * @return {Promise}
-     */
-    executeSql(sql, params, dbname, readonly = false) {
-        const _this = this;
-        return new Promise(function(resolve, reject) {
-            const conn = _this._getInstance(dbname, readonly);
-            if (!conn) {
-                return reject(Error(`there is no client with ${dbname}`));
-            }
-            conn.getConnection(function(err, client) {
-                if (err) {
-                    return reject(err);
-                }
-                client.query(sql, params, function(err, results) {
-                    client.release();
-                    if (err) {
-                        err.message_body = {
-                            sql,
-                            params,
-                        };
-                        return reject(err);
-                    }
-                    resolve(results);
-                });
-            });
-        });
+    update(tableName, opts, dbname) {
+        return this._get(dbname).update(tableName, opts);
+    }
+
+    insert(tableName, opts, dbname) {
+        return this._get(dbname).insert(tableName, opts);
     }
 
 
@@ -136,6 +96,25 @@ class MySQLPool extends SQLBuilder {
 
 
     /**
+     * 获取mysql实例
+     * @param {String} dbname
+     * @param {Boolean} readonly
+     */
+    _getInstance(dbname, readonly) {
+        if (readonly && this.pools[dbname].follows.length > 0) {
+            if (this.pools[dbname].follows.length === 1) {
+                return this.pools[dbname].follows[0];
+            }
+            return this.pools[dbname].follows[Math.floor(Math.random() * this.pools[dbname].follows.length)];
+        }
+        if (this.pools[dbname].master) {
+            return this.pools[dbname].master;
+        }
+        return null;
+    }
+
+
+    /**
      * 获取一个连接池实例
      * @param {String} dbname
      * @param {Boolean} readonly
@@ -144,8 +123,15 @@ class MySQLPool extends SQLBuilder {
     get(dbname, readonly) {
         const conn = this._getInstance(dbname, readonly);
         if (!conn) {
-            // throw Error(`there is no client with ${dbname}`);
             return null;
+        }
+        return new Pool(conn);
+    }
+
+    _get(dbname, readonly) {
+        const conn = this._getInstance(dbname, readonly);
+        if (!conn) {
+            throw Error(`there is no client with ${dbname}`);
         }
         return new Pool(conn);
     }

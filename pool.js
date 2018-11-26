@@ -7,14 +7,16 @@ class Pool extends SQLBuilder {
     constructor(conn) {
         super();
         this.conn = conn;
+        this.timezone = conn.config.connectionConfig.timezone;
+        this.stringifyObjects = conn.config.connectionConfig.stringifyObjects;
     }
 
     /**
-    * 执行sql
-    * @param sql
-    * @param params
-    * @return {Promise}
-    */
+     * 执行sql
+     * @param sql
+     * @param params
+     * @return {Promise}
+     */
     executeSql(sql, params) {
         const _this = this;
         return new Promise(function(resolve, reject) {
@@ -38,7 +40,6 @@ class Pool extends SQLBuilder {
     }
 
 }
-
 
 module.exports = Pool;
 
