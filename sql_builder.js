@@ -179,7 +179,7 @@ class SQLBuilder {
     _select(tableName, opts) {
         assert(tableName, 'table name is null');
         let sql = 'select ';
-        if (opts.fields instanceof Array && opts.fields.length > 0) {
+        if (opts && opts.fields instanceof Array && opts.fields.length > 0) {
             sql += '`';
             sql += opts.fields.join('`,`');
             sql += '`';
