@@ -3,6 +3,7 @@
 const mysql = require('mysql');
 const Transaction = require('./transaction');
 const Pool = require('./pool');
+const assert = require('assert');
 
 class MySQLPool {
 
@@ -101,6 +102,7 @@ class MySQLPool {
      * @param {Boolean} readonly
      */
     _getInstance(dbname, readonly) {
+        assert(dbname, 'database name is empty');
         if (readonly && this.pools[dbname].follows.length > 0) {
             if (this.pools[dbname].follows.length === 1) {
                 return this.pools[dbname].follows[0];
