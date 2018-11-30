@@ -76,9 +76,13 @@ class SQLBuilder {
             const values_arr = [];
             params_arr = [];
             for (const key in opts.insert) {
+                const value = opts.insert[key];
+                if (value === undefined || value === null) {
+                    continue;
+                }
                 sql_arr.push('`' + key + '`');
                 values_arr.push('?');
-                params_arr.push(opts.insert[key]);
+                params_arr.push(value);
             }
             sql_t = `(${sql_arr.join(',')}) values (${values_arr.join(',')}) `;
             sql += SqlString.format(sql_t, params_arr, this.stringifyObjects, this.timezone);
@@ -87,8 +91,12 @@ class SQLBuilder {
                 sql_arr = [];
                 params_arr = [];
                 for (const key in opts.onUpdate) {
+                    const value = opts.onUpdate[key];
+                    if (value === undefined || value === null) {
+                        continue;
+                    }
                     sql_arr.push('`' + key + '`= ?');
-                    params_arr.push(opts.onUpdate[key]);
+                    params_arr.push(value);
                 }
                 sql_t = sql_arr.join(',');
                 sql += SqlString.format(sql_t, params_arr, this.stringifyObjects, this.timezone);
