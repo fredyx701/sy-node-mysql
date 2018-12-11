@@ -115,10 +115,36 @@ await mysql.update('db_one.person', opts, 'TEST_DATABASE');
 
 ### insert
 
+* simple insert
+
+```js
+await mysql.insert('person', { name: 'Tom', age: 18 }, 'TEST_DATABASE');
+```
+
+* multi insert
+
+```js
+const opts = [{ name: 'Tom1', age: 15 }, { name: 'Tom2', age: 17 }, { name: 'Tom3', age: 16 }];
+await mysql.insert('person', opts, 'TEST_DATABASE');
+```
+
+* option insert
+
 ```js
 const opts = {
     insert: { name: 'Tom', age: 18 },
     onUpdate: { age: 18 }
+};
+await mysql.insert('person', opts, 'TEST_DATABASE');
+```
+
+
+* multi option insert
+
+```js
+const opts = {
+    insert: [{ name: 'Tom1', age: 15 }, { name: 'Tom2', age: 17 }, { name: 'Tom3', age: 16 }],
+    onUpdate: { age: 18 },
 };
 await mysql.insert('person', opts, 'TEST_DATABASE');
 ```

@@ -68,6 +68,25 @@ async function insert() {
     await mysql.insert('person', opts, 'TEST_DATABASE');
 }
 
+async function insert1() {
+    const opts = {
+        insert: [{ name: 'Tom1', age: 15 }, { name: 'Tom2', age: 17 }, { name: 'Tom3', age: 16 }],
+        onUpdate: { age: 18 },
+    };
+    await mysql.insert('person', opts, 'TEST_DATABASE');
+}
+
+async function insert2() {
+    const opts = { name: 'Tom', age: 18 };
+    await mysql.insert('person', opts, 'TEST_DATABASE');
+}
+
+async function insert3() {
+    const opts = [{ name: 'Tom1', age: 15 }, { name: 'Tom2', age: 17 }, { name: 'Tom3', age: 16 }];
+    await mysql.insert('person', opts, 'TEST_DATABASE');
+}
+
+
 async function transaction() {
     const transaction = await mysql.beginTransaction('TEST_DATABASE');
     try {
@@ -96,6 +115,9 @@ async function transaction() {
 
 void async function() {
     // await insert();
+    // await insert1();
+    // await insert2();
+    // await insert3();
     await select3();
     await update();
     await select1();

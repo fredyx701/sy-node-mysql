@@ -35,3 +35,19 @@ opts = {
 };
 res = buider._insert('person', opts);
 console.log(res);
+
+opts = {
+    insert: [{ name: 'Tom', age: 18 }, { name: 'Tom1', age: 17 }, { name: 'Tom2', age: 16 }],
+    onUpdate: { age: 18, name: 'John' },
+};
+res = buider._insert('person', opts);
+console.log(res);
+
+opts = { name: 'Tom', age: 18 };
+res = buider._insert('person', opts);
+console.log(res);
+
+opts = [{ name: 'Tom', age: 18 }, { name: 'Tom1', age: 17 }, { name: 'Tom2', age: 16 }];
+res = buider._insert('person', opts);
+console.log(res);
+
