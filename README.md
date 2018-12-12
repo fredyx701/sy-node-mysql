@@ -121,8 +121,7 @@ await mysql.update('db_one.person', opts, 'TEST_DATABASE');
 await mysql.insert('person', { name: 'Tom', age: 18 }, 'TEST_DATABASE');
 ```
 
-> 当params 里有 null 或 undefined, 例如 `{ name: 'Tom', age: null, score: undefined }`  builder 不会拼接该字段。 结果: `insert into person(name) values ('Tom')`  
-> 若确实需要传递 null 值, 使用 mysql.TypeNull, 例如:  `{ name: 'Tom', age: mysql.TypeNull }`。 结果: `insert into person('name','age') values ('Tom',NULL)`
+> 当params 里有 undefined, 例如 `{ name: 'Tom', age: undefined }`  builder 不会拼接该字段。 结果: `insert into person(name) values ('Tom')`  
 
 * multi insert
 
@@ -131,7 +130,7 @@ const opts = [{ name: 'Tom1', age: 15 }, { name: 'Tom2', age: 17 }, { name: 'Tom
 await mysql.insert('person', opts, 'TEST_DATABASE');
 ```
 
-> params array 会将各个 params 取并集, 来获取 insert column; 缺少 column 的 params, builder 会赋予该column null值;  当params 里有 null 或 undefined, builder 会拼接该column且赋予null值。  
+> params array 会将各个 params 取并集, 来获取 insert column; 缺少 column 的 params, builder 会赋予该column null值;  当params 里有 undefined, builder 会拼接该column且赋予null值。  
 > 参数示例：`[{ name: 'Tom1', age: 15, city: 'SZ' }, { name: 'Tom2', age: null, score: undefined }， { name: 'Tom3'}];`   
 > 结果示例：`insert into person('name','age','city','score') values ('Tom1',15,'SZ',NULL),('Tom2',NULL,NULL,NULL),('Tom3',NULL,NULL,NULL)`  
 

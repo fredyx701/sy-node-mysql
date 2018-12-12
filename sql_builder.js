@@ -2,7 +2,6 @@
 
 const assert = require('assert');
 const SqlString = require('mysql/lib/protocol/SqlString');
-const { TypeNull } = require('./type');
 
 
 class SQLBuilder {
@@ -185,7 +184,7 @@ class SQLBuilder {
         assert(tableName, 'table name is null');
 
         opts = opts || {};
-        if (opts instanceof Array || (typeof opts.insert !== 'object' || opts.insert === null) || opts.insert instanceof TypeNull) {
+        if (opts instanceof Array || (typeof opts.insert !== 'object' || opts.insert === null)) {
             opts = { insert: opts };
         }
 
@@ -217,12 +216,10 @@ class SQLBuilder {
             sql_t = `(${sql_arr.join(',')}) values ${values_arr.join(',')} `;
         } else {
             for (const key in rows) {
-                let value = rows[key];
-                if (value === undefined || value === null) {
+                const value = rows[key];
+                if (value === undefined) {
                     continue;
                 }
-                // null 值赋值
-                value = value instanceof TypeNull ? null : value;
                 sql_arr.push('`' + key + '`');
                 values_arr.push('?');
                 params_arr.push(value);
@@ -237,7 +234,7 @@ class SQLBuilder {
             params_arr = [];
             for (const key in opts.onUpdate) {
                 const value = opts.onUpdate[key];
-                if (value === undefined || value === null) {
+                if (value === undefined) {
                     continue;
                 }
                 sql_arr.push('`' + key + '`= ?');

@@ -4,7 +4,6 @@ const mysql = require('mysql');
 const Transaction = require('./transaction');
 const Pool = require('./pool');
 const assert = require('assert');
-const { TypeNull } = require('./type');
 
 class MySQLPool {
 
@@ -34,7 +33,6 @@ class MySQLPool {
                 this.pools[dbname].master = pool;
             }
         }
-        this.TypeNull = new TypeNull();
     }
 
 
