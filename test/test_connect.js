@@ -37,7 +37,7 @@ async function select2() {
         params: [[ 100, 101 ], 10 ],
     };
     const res = await mysql.select('person', opts, 'TEST_DATABASE');
-    console.log(res);
+    console.log(res.length);
 }
 
 async function select3() {
@@ -114,10 +114,13 @@ async function transaction() {
 
 
 void async function() {
-    // await insert();
-    // await insert1();
-    // await insert2();
-    // await insert3();
+    await select2();
+
+    await insert();
+    await insert1();
+    await insert2();
+    await insert3();
+
     await select3();
     await update();
     await select1();

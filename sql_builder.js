@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const SqlString = require('mysql/lib/protocol/SqlString');
+const { TypeNull } = require('./type');
 
 
 class SQLBuilder {
@@ -36,7 +37,7 @@ class SQLBuilder {
 
     insert(tableName, opts) {
         const sql = this._insert(tableName, opts);
-        return this.executeSql(sql, (opts && opts.params) || null);
+        return this.executeSql(sql, null);
     }
 
     _isExistObject(obj) {
@@ -184,45 +185,52 @@ class SQLBuilder {
         assert(tableName, 'table name is null');
 
         opts = opts || {};
-        if (opts instanceof Array || typeof opts.insert !== 'object') {
+        if (opts instanceof Array || (typeof opts.insert !== 'object' || opts.insert === null) || opts.insert instanceof TypeNull) {
             opts = { insert: opts };
         }
 
         let sql = 'insert into ' + tableName;
-        let sql_arr = null;
-        let params_arr = null;
+        let sql_arr = [];
+        let params_arr = [];
+        const values_arr = [];
         let sql_t = '';
 
         assert(opts.insert !== null && typeof opts.insert === 'object', 'invalide insert params');
 
-        let firstObj;
-        let rows = opts.insert;
+        const rows = opts.insert;
         if (Array.isArray(rows)) {
-            firstObj = rows[0];
+            let field_obj = {};
+            for (const row of rows) {
+                field_obj = Object.assign(field_obj, row);
+            }
+            const field_arr = Object.keys(field_obj);
+            sql_arr = field_arr.map(key => '`' + key + '`');
+            for (const row of rows) {
+                const values_data = [];
+                for (const key of field_arr) {
+                    const value = row[key];
+                    values_data.push('?');
+                    params_arr.push(value);
+                }
+                values_arr.push(`(${values_data.join(',')})`);
+            }
+            sql_t = `(${sql_arr.join(',')}) values ${values_arr.join(',')} `;
         } else {
-            firstObj = rows;
-            rows = [ rows ];
-        }
-        sql_arr = [];
-        const values_arr = [];
-        params_arr = [];
-        for (const key in firstObj) {
-            sql_arr.push('`' + key + '`');
-        }
-        for (const row of rows) {
-            const values_data = [];
-            for (const key in row) {
-                const value = row[key];
+            for (const key in rows) {
+                let value = rows[key];
                 if (value === undefined || value === null) {
                     continue;
                 }
-                values_data.push('?');
+                // null 值赋值
+                value = value instanceof TypeNull ? null : value;
+                sql_arr.push('`' + key + '`');
+                values_arr.push('?');
                 params_arr.push(value);
             }
-            values_arr.push(`(${values_data.join(',')})`);
+            sql_t = `(${sql_arr.join(',')}) values (${values_arr.join(',')}) `;
         }
-        sql_t = `(${sql_arr.join(',')}) values ${values_arr.join(',')} `;
         sql += SqlString.format(sql_t, params_arr, this.stringifyObjects, this.timezone);
+
         if (this._isExistObject(opts.onUpdate)) {
             sql += ' ON DUPLICATE KEY UPDATE ';
             sql_arr = [];

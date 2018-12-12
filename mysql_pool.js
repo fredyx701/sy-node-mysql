@@ -4,6 +4,7 @@ const mysql = require('mysql');
 const Transaction = require('./transaction');
 const Pool = require('./pool');
 const assert = require('assert');
+const { TypeNull } = require('./type');
 
 class MySQLPool {
 
@@ -11,6 +12,7 @@ class MySQLPool {
      * @param config   配置内容   {name, database, host, port, user, password}
      */
     constructor(config) {
+        assert(config, 'missing config');
         this.pools = {};
         config = config instanceof Array ? config : [ config ];
         for (const info of config) {
@@ -32,6 +34,7 @@ class MySQLPool {
                 this.pools[dbname].master = pool;
             }
         }
+        this.TypeNull = new TypeNull();
     }
 
 

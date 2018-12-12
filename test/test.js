@@ -3,6 +3,7 @@
 const SQLBuilder = require('../sql_builder');
 
 const buider = new SQLBuilder();
+const { TypeNull } = require('../type');
 
 
 let opts = {
@@ -43,11 +44,18 @@ opts = {
 res = buider._insert('person', opts);
 console.log(res);
 
-opts = { name: 'Tom', age: 18 };
+opts = { name: 'Tom', age: 18, insert: '666' };
 res = buider._insert('person', opts);
 console.log(res);
 
-opts = [{ name: 'Tom', age: 18 }, { name: 'Tom1', age: 17 }, { name: 'Tom2', age: 16 }];
+opts = { name: 'Tom', age: 18, insert: null };
 res = buider._insert('person', opts);
 console.log(res);
 
+opts = { name: 'Tom', age: 18, insert: new TypeNull() };
+res = buider._insert('person', opts);
+console.log(res);
+
+opts = [{ name: 'Tom', age: 18, tt: null }, { name: 'Tom1', age: 17, aa: null }, { name: 'Tom2', age: 16, tt: 1, aa: 2, bb: 3 }];
+res = buider._insert('person', opts);
+console.log(res);
