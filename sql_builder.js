@@ -244,6 +244,17 @@ class SQLBuilder {
             sql += SqlString.format(sql_t, params_arr, this.stringifyObjects, this.timezone);
         }
 
+        if (this._isExitArray(opts.onUpdate)) {
+            sql += ' ON DUPLICATE KEY UPDATE ';
+            sql_arr = [];
+            params_arr = [];
+            for (const key of opts.onUpdate) {
+                sql_arr.push('`' + key + '` = values(`' + key + '`)');
+            }
+            sql_t = sql_arr.join(',');
+            sql += SqlString.format(sql_t, params_arr, this.stringifyObjects, this.timezone);
+        }
+
         return sql;
     }
 

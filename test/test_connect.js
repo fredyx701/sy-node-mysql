@@ -76,6 +76,18 @@ async function insert1() {
     await mysql.insert('person', opts, 'TEST_DATABASE');
 }
 
+async function insert4() {
+    const opts = {
+        insert: [
+            { id: 100, name: 'Tom', age: 18 },
+            { id: 107, name: 'Tom1', age: 17 },
+            { id: 104, name: 'Tom2', age: 16 },
+        ],
+        onUpdate: [ 'name', 'age' ],
+    };
+    await mysql.insert('person', opts, 'TEST_DATABASE');
+}
+
 async function insert2() {
     const opts = { name: 'Tom', age: 18 };
     await mysql.insert('person', opts, 'TEST_DATABASE');
@@ -120,6 +132,7 @@ void async function() {
     await insert1();
     await insert2();
     await insert3();
+    await insert4();
 
     await select3();
     await update();

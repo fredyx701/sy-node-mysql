@@ -43,6 +43,17 @@ opts = {
 res = buider._insert('person', opts);
 console.log(res);
 
+opts = {
+    insert: [
+        { id: 100, name: 'Tom', age: 18 },
+        { id: 107, name: 'Tom1', age: 17 },
+        { id: 104, name: 'Tom2', age: 16 },
+    ],
+    onUpdate: [ 'name', 'age' ],
+};
+res = buider._insert('person', opts);
+console.log(res);
+
 opts = { name: 'Tom', age: 18, insert: '666' };
 res = buider._insert('person', opts);
 console.log(res);

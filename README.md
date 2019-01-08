@@ -153,6 +153,13 @@ const opts = {
     onUpdate: { age: 18 },
 };
 await mysql.insert('person', opts, 'TEST_DATABASE');
+
+// ON DUPLICATE KEY UPDATE name = values(name), age = values(age)
+const opts = {
+    insert: [{ name: 'Tom1', age: 15 }, { name: 'Tom2', age: 17 }, { name: 'Tom3', age: 16 }],
+    onUpdate: ['name', 'age'],
+};
+await mysql.insert('person', opts, 'TEST_DATABASE');
 ```
 
 ### transaction
