@@ -57,20 +57,28 @@ class SQLBuilder {
      */
     _select(tableName, opts) {
         assert(tableName, 'table name is null');
+        // 非条件sql
+        if (!opts) {
+            return 'select * from ' + tableName;
+        }
+
         let sql = 'select ';
-        if (opts && opts.fields instanceof Array && opts.fields.length > 0) {
-            sql += '`';
-            sql += opts.fields.join('`,`');
-            sql += '`';
+        const isFields = this._isExitArray(opts.fields);
+        const isLiteralFields = this._isExitArray(opts.literalFields);
+        if (isFields || isLiteralFields) {
+            if (isFields) {
+                sql += '`';
+                sql += opts.fields.join('`,`');
+                sql += '`';
+            }
+            if (isLiteralFields) {
+                sql += (isFields ? ',' : '') + opts.literalFields.join(',');
+            }
         } else {
             sql += '*';
         }
         sql += ' from ' + tableName;
 
-        // 条件sql
-        if (!opts) {
-            return sql;
-        }
         let sql_arr = null;
         let params_arr = null;
         let sql_t = '';

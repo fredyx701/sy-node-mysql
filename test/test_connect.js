@@ -26,15 +26,16 @@ async function select1() {
 
 async function select2() {
     const opts = {
-        fields: [ 'age', 'name' ],
-        where: { aa: 1 },
+        fields: [ 'city' ],
+        literalFields: [ 'sum(score) as scores', 'avg(age) as ages' ],
+        where: { tt: 1 },
         literalWhere: [ 'id in (?)' ],
         group: 'city',
-        having: [ 'age >= ?' ],
-        orders: [[ 'age', 'desc' ], [ 'name', 'asc' ]],
+        having: [ 'ages >= ?' ],
+        orders: [[ 'ages', 'desc' ], [ 'city', 'asc' ]],
         limit: 10,
-        offset: 5,
-        params: [[ 100, 101 ], 10 ],
+        offset: 0,
+        params: [[ 2, 100, 101 ], 10 ],
     };
     const res = await mysql.select('person', opts, 'TEST_DATABASE');
     console.log(res.length);

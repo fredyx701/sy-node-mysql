@@ -7,6 +7,7 @@ const buider = new SQLBuilder();
 
 let opts = {
     fields: [ 'age', 'name' ],
+    literalFields: [ 'avg(score) as scores' ],
     where: { age: 1, name: 'Tom' },
     literalWhere: [ 'id in (?)', 'id > ?' ],
     group: 'city',

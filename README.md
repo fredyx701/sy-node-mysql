@@ -78,12 +78,13 @@ const res = await mysql.select('person', { where: { id: 100 } }, 'TEST_DATABASE'
 
 ```js
 const opts = {
-    fields: ['age', 'name'],
-    where: { aa: 1 },
+    fields: ['city'],
+    literalFields: ['sum(score) as scores', 'avg(age) as ages'],
+    where: { tt: 1 },
     literalWhere: ['id in (?)'],
     group: 'city',
-    having: ['age >= ?'],
-    orders: [['age', 'desc'], ['name', 'asc']],
+    having: ['ages >= ?'],
+    orders: [['ages', 'desc'], ['city', 'asc']],
     limit: 10,
     offset: 5,
     params: [[100, 101], 10]
