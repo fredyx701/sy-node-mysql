@@ -61,6 +61,10 @@ class MySQLPool {
         return this._get(dbname, readonly).select(tableName, opts);
     }
 
+    selectAndCount(tableName, opts, dbname, readonly = false) {
+        return this._get(dbname, readonly).selectAndCount(tableName, opts);
+    }
+
     update(tableName, opts, dbname) {
         return this._get(dbname).update(tableName, opts);
     }

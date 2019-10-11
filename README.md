@@ -72,6 +72,8 @@ await mysql.query(sql, opts, 'TEST_DATABASE');
 
 ```js
 const res = await mysql.select('person', { where: { id: 100 } }, 'TEST_DATABASE', true);
+// select and count
+const { count, rows } = await mysql.selectAndCount('person', { where: { id: 100 } }, 'TEST_DATABASE', true);
 ```
 
 * conditional select

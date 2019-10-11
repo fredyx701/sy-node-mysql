@@ -49,6 +49,22 @@ async function select3() {
     console.log(res);
 }
 
+async function select4() {
+    const res1 = await mysql.selectAndCount('person', { where: { id: 100 } }, 'TEST_DATABASE', true);
+    console.log(res1);
+
+    const opts = {
+        where: { tt: 1 },
+        literalWhere: [ 'id in (?)' ],
+        orders: [[ 'ages', 'desc' ], [ 'city', 'asc' ]],
+        limit: 10,
+        offset: 0,
+        params: [[ 2, 100, 101 ], 10 ],
+    };
+    const res2 = await mysql.selectAndCount('person', opts, 'TEST_DATABASE');
+    console.log(res2);
+}
+
 async function update() {
     const opts = {
         update: { name: 'NICK', age: 17, updated_at: new Date() },
@@ -128,6 +144,7 @@ async function transaction() {
 
 void async function() {
     await select2();
+    await select4();
 
     await insert();
     await insert1();

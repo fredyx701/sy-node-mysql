@@ -29,6 +29,19 @@ class SQLBuilder {
         return this.executeSql(sql, (opts && opts.params) || null);
     }
 
+    async selectAndCount(tableName, opts) {
+        const opts1 = {
+            literalFields: [ 'count(1) count' ],
+            where: opts.where,
+            literalWhere: opts.literalWhere,
+            params: opts.params,
+        };
+        const [{ count }] = await this.select(tableName, opts1);
+        const rows = await this.select(tableName, opts);
+
+        return { count, rows };
+    }
+
     update(tableName, opts) {
         const sql = this._update(tableName, opts);
         return this.executeSql(sql, (opts && opts.params) || null);
